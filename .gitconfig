@@ -31,7 +31,7 @@
   default = current
 [core]
   excludesfile = ~/.gitignore_global
-  pager = delta --theme="night-owlish"
+  pager = delta
   whitespace = space-before-tab,-indent-with-non-tab,trailing-space
   # Make `git rebase` safer on macOS.
 	# More info: <http://www.git-tower.com/blog/make-git-rebase-safe-on-osx/>
@@ -58,6 +58,9 @@
 	old = red bold
 	new = green bold
 	whitespace = red reverse
+[delta]
+       feature = night-owlish
+       side-by-side = true
 [help]
 	autocorrect = 1
 [merge]
