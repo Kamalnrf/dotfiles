@@ -17,6 +17,12 @@ alias dl="cd ~/Downloads"
 alias dt="cd ~/Desktop"
 alias p="cd ~/projects"
 alias g="git"
+alias pg="echo 'Pinging Google' && ping www.google.com";
+alias showFiles='defaults write com.apple.finder AppleShowAllFiles YES; killall Finder /System/Library/CoreServices/Finder.app'
+alias hideFiles='defaults write com.apple.finder AppleShowAllFiles NO; killall Finder /System/Library/CoreServices/Finder.app'
+alias deleteDSFiles="find . -name '.DS_Store' -type f -delete"
+alias npm-update="npx npm-check-updates --dep prod,dev --upgrade";
+alias yarn-update="yarn upgrade-interactive --latest";
 
 # Detect which `ls` flavor is in use
 if ls --color > /dev/null 2>&1; then # GNU `ls`
@@ -29,6 +35,7 @@ fi
 
 # List all files colorized in long format
 alias l="ls -lF ${colorflag}"
+alias ll="ls -1a";
 
 # List all files colorized in long format, excluding . and ..
 alias la="ls -lAF ${colorflag}"

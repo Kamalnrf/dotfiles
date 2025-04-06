@@ -47,6 +47,9 @@ alias nodeify="PS1=\"💥\"$'\n'\"$ \"";
 alias reactify="PS1=\"⚛️\"$'\n'\"$ \"";
 alias harryify="PS1=\"🧙‍\"$'\n'\"$ \"";
 
+# ripgrep config
+RIPGREP_CONFIG_PATH=$HOME/.ripgreprc
+
 # allow substitution in PS1
 setopt promptsubst
 
@@ -67,22 +70,25 @@ setopt INC_APPEND_HISTORY
 setopt HIST_IGNORE_DUPS
 
 # PATH ALTERATIONS
-## Node
-PATH="/usr/local/bin:$PATH:./node_modules/.bin";
+PATH="/usr/local/bin:$PATH";
+
+## node_modules 😆 this is *way* faster than using "npm prefix" and it works fine.
+PATH="$PATH:./node_modules/.bin:../node_modules/.bin:../../node_modules/.bin:../../../node_modules/.bin:../../../../node_modules/.bin:../../../../../node_modules/.bin:../../../../../../node_modules/.bin:../../../../../../../node_modules/.bin"
 
 ## Yarn
 PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
+alias yarn="echo update the PATH in ~/.zshrc"
 
-# CDPATH ALTERATIONS
-CDPATH=.:$HOME:$HOME/code:$HOME/Desktop
-# CDPATH=($HOME $HOME/code $HOME/Desktop)
+# Custom bins
+PATH="$PATH:$HOME/.bin:$HOME/.local/bin";
 
-# Custom Aliases
+# fly manual install
+PATH="$HOME/.fly/bin:$PATH";
+
+# npm.im/n
+export N_PREFIX="$HOME/n"; [[ :$PATH: == *"$N_PREFIX/bin"* ]] || PATH="$N_PREFIX/bin:$PATH"  # Added by n-install (see http://git.io/n-install-repo).
 
 autoload -Uz compinit && compinit
-
-export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 
 export JAVA_HOME=$(/usr/libexec/java_home -v 1.8)
 export ANDROID_HOME=$HOME/Library/Android/sdk

@@ -19,38 +19,38 @@ while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 echo "Making the workspace directory"
 mkdir -p "${HOME}/workspace"
 
-echo "Installing homebrew"
+echo "installing homebrew"
+# install homebrew https://brew.sh
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/$USER/.zprofile
+
+echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/kamal/.zprofile
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
-echo "Installing Node"
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
-export NVM_DIR="$HOME/.nvm" 
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-nvm install node
-
 echo "Brew Install"
-brew install git watchman tree bat git-delta trash
+brew install git ripgrep watchman tree bat \
+git-delta gh flyctl
+
+echo "installing node (via n-install)"
+curl -L https://git.io/n-install | bash
 
 echo "node --version: $(node --version)"
 echo "npm --version: $(npm --version)"
 
 echo "Installing few global npm packages"
-npm install --global serve expo-cli
+npm install --global serve fkill-cli
 
 echo "Installing apps with brew cask"
-brew install --cask raycast google-chrome firefox brave-browser visual-studio-code \
-1password suspicious-package spotify slack docker iterm2 android-studio notion \
-discord
+brew install --cask raycast google-chrome firefox arc visual-studio-code \
+1password suspicious-package spotify slack docker iterm2 notion \
+discord chatgpt claude
 
-echo "Generating an RSA token for GitHub"
-mkdir -p ~/.ssh
-touch ~/.ssh/config
-ssh-keygen -t rsa -b 4096 -C "kamalnrf@gmail.com"
-echo "Host *\n AddKeysToAgent yes\n UseKeychain yes\n IdentityFile ~/.ssh/id_rsa" | tee ~/.ssh/config
+echo "Generating a new SSH key for GitHub"
+ssh-keygen -t ed25519 -C "kamalnrf@gmail.com" -f ~/.ssh/id_ed25519
 eval "$(ssh-agent -s)"
-echo "run 'pbcopy < ~/.ssh/id_rsa.pub' and paste that into GitHub"
+touch ~/.ssh/config
+echo "Host *\n AddKeysToAgent yes\n UseKeychain yes\n IdentityFile ~/.ssh/id_ed25519" | tee ~/.ssh/config
+ssh-add -K ~/.ssh/id_ed25519
+echo "run 'pbcopy < ~/.ssh/id_ed25519.pub' and paste that into GitHub"
 
 ## CLONING AND RUNNING OHER DOTFILES
 ln -s "${HOME}/dotfiles/.gitconfig" "${HOME}/.gitconfig"
