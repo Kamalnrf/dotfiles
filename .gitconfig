@@ -29,6 +29,7 @@
 	whitespace = fix
 [push]
   default = current
+  autoSetupRemote = true
 [core]
   excludesfile = ~/.gitignore_global
   pager = delta
