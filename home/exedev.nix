@@ -1,9 +1,11 @@
-{ config, lib, ... }:
+{ config, lib, pkgs, ... }:
 {
   home.sessionPath = [
     "$HOME/.local/bin"
     "/usr/local/bin"
   ];
+
+  home.sessionVariables.TERMINFO_DIRS = "${pkgs.ghostty.terminfo}/share/terminfo:";
 
   programs.bash = {
     enable = true;
