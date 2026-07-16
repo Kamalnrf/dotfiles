@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly INSTALLER_VERSION="v3.21.5"
+readonly DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+
+die() {
+  printf 'setup: %s\n' "$*" >&2
+  exit 1
+}
+
+case "$(uname -s):$(uname -m):$(id -un):$HOME" in
+  Darwin:arm64:kamal:/Users/kamal)
+    PROFILE="kamal"
+    ;;
+  Linux:x86_64:exedev:/home/exedev)
+    PROFILE="exedev"
+    ;;
+  *)
+    die "unsupported host ($(uname -s), $(uname -m), $(id -un), $HOME)"
+    ;;
+esac
+
+[[ "$DOTFILES_DIR" == "$HOME/dotfiles" ]] || die "clone this repository to $HOME/dotfiles (found $DOTFILES_DIR)"
+[[ -f "$DOTFILES_DIR/flake.nix" && -f "$DOTFILES_DIR/flake.lock" ]] || die "flake.nix or flake.lock is missing"
+
+if [[ -r /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]]; then
+  # shellcheck disable=SC1091
+  source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+fi
+
+if ! command -v nix >/dev/null 2>&1; then
+  if [[ -e /nix/receipt.json || -e /nix/nix-installer || -d /nix/store ]]; then
+    die "Nix appears to be installed but is unusable; try: sudo /nix/nix-installer repair"
+  fi
+
+  installer="$(mktemp -t nix-installer.XXXXXX)"
+  trap 'rm -f "$installer"' EXIT HUP INT TERM
+  curl --proto '=https' --tlsv1.2 -fsSL \
+    "https://install.determinate.systems/nix/tag/$INSTALLER_VERSION" \
+    -o "$installer"
+  sh "$installer" install --no-confirm
+  rm -f "$installer"
+  trap - EXIT HUP INT TERM
+
+  # shellcheck disable=SC1091
+  source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+fi
+
+nix --version
+
+if [[ -n "$(git -C "$DOTFILES_DIR" status --porcelain)" ]]; then
+  printf 'setup: warning: the dotfiles checkout has uncommitted changes\n' >&2
+  printf 'setup: untracked files are excluded from Git flakes until staged\n' >&2
+fi
+
+backup_suffix="hm-backup-$(date -u +%Y%m%dT%H%M%SZ)"
+
+# These legacy paths are not Home Manager targets but shadow their XDG
+# replacements. Preserve them during the first migration instead of deleting
+# or silently continuing with duplicate configuration.
+for legacy in \
+  "$HOME/.aliases" \
+  "$HOME/.functions" \
+  "$HOME/.gitconfig" \
+  "$HOME/.gitignore_global" \
+  "$HOME/.tmux.conf"
+do
+  if [[ -e "$legacy" || -L "$legacy" ]]; then
+    mv "$legacy" "$legacy.$backup_suffix"
+    printf 'setup: backed up %s\n' "$legacy"
+  fi
+done
+
+if [[ -e "$HOME/.config/nvim" && ! -L "$HOME/.config/nvim" ]]; then
+  mv "$HOME/.config/nvim" "$HOME/.config/nvim.$backup_suffix"
+  printf 'setup: backed up %s\n' "$HOME/.config/nvim"
+fi
+
+printf 'setup: activating profile %s (backup suffix: %s)\n' "$PROFILE" "$backup_suffix"
+nix --extra-experimental-features 'nix-command flakes' \
+  run --no-write-lock-file "$DOTFILES_DIR#home-manager" -- \
+  switch --flake "$DOTFILES_DIR#$PROFILE" -b "$backup_suffix"
+
+printf '\nsetup: profile %s activated\n' "$PROFILE"
+printf 'setup: open a new login shell (or reconnect over SSH) to use it\n'
+printf 'setup: list generations with: home-manager generations\n'

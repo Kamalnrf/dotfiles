@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -gt 0 ]]; then
+  directory="$1"
+else
+  directory="$(zoxide query -l | fzf --prompt='project> ' --height=100% --reverse || true)"
+fi
+
+if [[ -z "$directory" ]]; then
+  exit 0
+fi
+
+directory="${directory/#\~/$HOME}"
+directory="$(cd "$directory" && pwd)"
+session_name="$(basename "$directory" | tr '.:' '__' | tr -c '[:alnum:]_-' '_')"
+agent_command="${TMUX_AGENT_COMMAND:-amp}"
+
+if ! tmux has-session -t "=$session_name" 2>/dev/null; then
+  tmux new-session -d -s "$session_name" -n workbench -c "$directory"
+
+  target_window="$session_name:workbench"
+  left_pane="$(tmux list-panes -t "$target_window" -F '#{pane_id}' | head -n 1)"
+  right_pane="$(tmux split-window -h -P -F '#{pane_id}' -t "$left_pane" -c "$directory")"
+
+  window_width="$(tmux display-message -p -t "$target_window" '#{window_width}')"
+  left_width="$((window_width * 30 / 100))"
+  tmux resize-pane -t "$left_pane" -x "$left_width"
+
+  tmux select-pane -t "$left_pane" -T "amp"
+  tmux select-pane -t "$right_pane" -T "shell"
+  tmux send-keys -t "$left_pane" "$agent_command" C-m
+  tmux select-pane -t "$left_pane"
+fi
+
+if [[ -n "${TMUX:-}" ]]; then
+  tmux switch-client -t "=$session_name"
+else
+  tmux attach -t "=$session_name"
+fi
