@@ -20,6 +20,99 @@ let
     rtpFilePath = "tmux.expose.tmux";
     src = tmuxExposeSrc;
   };
+
+  vtSrc = pkgs.fetchFromGitHub {
+    owner = "val-town";
+    repo = "vt";
+    rev = "1eb64134b29ccec4c0465c8647f03e6edcfd7d22";
+    hash = "sha256-XJfZ0wLW3QVfxZ1PaYX/n9+HIVnW1ZXALaoPsjxUnaM=";
+  };
+
+  vtDenoCache = pkgs.stdenvNoCC.mkDerivation {
+    pname = "vt-deno-cache";
+    version = "0.1.59";
+    src = vtSrc;
+    nativeBuildInputs = [ pkgs.deno pkgs.cacert pkgs.python3 ];
+    dontConfigure = true;
+    dontFixup = true;
+
+    buildPhase = ''
+      runHook preBuild
+      export DENO_DIR="$out"
+      export HOME="$TMPDIR/home"
+      export SSL_CERT_FILE="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+      mkdir -p "$DENO_DIR" "$HOME"
+      deno cache --frozen vt.ts
+      rm -f "$DENO_DIR"/*_cache_v2*
+      python3 - <<'PY'
+      import json
+      import os
+      from pathlib import Path
+
+      keep_headers = {
+          "content-type",
+          "location",
+          "x-deno-warning",
+          "x-typescript-types",
+      }
+      marker = b"\n// denoCacheMetadata="
+
+      for path in (Path(os.environ["DENO_DIR"]) / "remote").rglob("*"):
+          if not path.is_file():
+              continue
+          source, separator, raw_metadata = path.read_bytes().rpartition(marker)
+          if not separator:
+              continue
+          metadata = json.loads(raw_metadata)
+          metadata["headers"] = {
+              key: value
+              for key, value in metadata.get("headers", {}).items()
+              if key.lower() in keep_headers
+          }
+          metadata["time"] = 0
+          normalized = json.dumps(metadata, sort_keys=True, separators=(",", ":"))
+          path.write_bytes(source + marker + normalized.encode())
+      PY
+      runHook postBuild
+    '';
+    installPhase = "true";
+
+    outputHashMode = "recursive";
+    outputHashAlgo = "sha256";
+    outputHash = {
+      aarch64-darwin = "sha256-0BXgb2cbCEWKI0DQOZsAqXhilUYWVixzNim1/AF48CA=";
+      x86_64-linux = "sha256-+R4cfyIBDClwqkKow7+Yi05uA9ja/D6Ur1BNtW/WMCg=";
+    }.${pkgs.stdenv.hostPlatform.system};
+  };
+
+  vt = pkgs.writeShellApplication {
+    name = "vt";
+    runtimeInputs = [ pkgs.coreutils pkgs.deno ];
+    text = ''
+      cache_root="''${XDG_CACHE_HOME:-$HOME/.cache}/vt"
+      cache_dir="$cache_root/deno-0.1.59"
+
+      if [[ ! -e "$cache_dir/.complete" ]]; then
+        mkdir -p "$cache_root"
+        rm -rf "$cache_dir"
+        mkdir -p "$cache_dir"
+        cp -R "${vtDenoCache}/." "$cache_dir/"
+        chmod -R u+w "$cache_dir"
+        touch "$cache_dir/.complete"
+      fi
+
+      export DENO_DIR="$cache_dir"
+      export DENO_NO_UPDATE_CHECK=1
+      exec deno run --cached-only -A "${vtSrc}/vt.ts" "$@"
+    '';
+    meta = {
+      description = "Official CLI for the Val Town platform";
+      homepage = "https://github.com/val-town/vt";
+      license = lib.licenses.mit;
+      mainProgram = "vt";
+      platforms = [ "aarch64-darwin" "x86_64-linux" ];
+    };
+  };
 in
 {
   home.stateVersion = "22.11";
@@ -42,6 +135,7 @@ in
     tmuxExpose
     tree
     uv
+    vt
   ];
 
   home.file = {
