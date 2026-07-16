@@ -56,6 +56,19 @@ fi
 
 backup_suffix="hm-backup-$(date -u +%Y%m%dT%H%M%SZ)"
 
+# Keep Home Manager's default flake location pointed at this repository so
+# `home-manager switch` works without an explicit --flake argument.
+home_manager_config="$HOME/.config/home-manager"
+mkdir -p "$HOME/.config"
+if [[ ! -e "$home_manager_config" || ! "$home_manager_config" -ef "$DOTFILES_DIR" ]]; then
+  if [[ -e "$home_manager_config" || -L "$home_manager_config" ]]; then
+    mv "$home_manager_config" "$home_manager_config.$backup_suffix"
+    printf 'setup: backed up %s\n' "$home_manager_config"
+  fi
+  ln -s "$DOTFILES_DIR" "$home_manager_config"
+  printf 'setup: linked %s to %s\n' "$home_manager_config" "$DOTFILES_DIR"
+fi
+
 # These legacy paths are not Home Manager targets but shadow their XDG
 # replacements. Preserve them during the first migration instead of deleting
 # or silently continuing with duplicate configuration.

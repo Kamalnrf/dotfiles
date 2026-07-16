@@ -21,6 +21,13 @@ git pull
 ./setup
 ```
 
+The setup script links `~/.config/home-manager` to `~/dotfiles`, so subsequent
+activations can also use Home Manager's default command:
+
+```sh
+home-manager switch
+```
+
 Machine-local shell settings belong in `~/.zshrc.local` on macOS or
 `~/.bashrc.local` on exe.dev. Machine-local Git settings belong in
 `~/.config/git/local`. Credentials and runtime state are intentionally not
