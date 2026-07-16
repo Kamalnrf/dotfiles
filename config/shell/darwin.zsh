@@ -3,35 +3,6 @@ export LSCOLORS=Fafacxdxbxegedabagacad
 export CLAUDE_CODE_NO_FLICKER=1
 export OPENCODE_EXPERIMENTAL_WORKSPACES=true
 
-git_branch() {
-  git branch --no-color 2>/dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\ \(\1\)/'
-}
-
-random_element() {
-  local -a elements=("$@")
-  printf "%s\n" "${elements[$((RANDOM % $# + 1))]}"
-}
-
-setEmoji() {
-  local emoji="$*"
-  PROMPT='%F{yellow}%~%F{green}$(git_branch)%f '"$emoji"$'\n$ '
-}
-
-newRandomEmoji() {
-  setEmoji "$(random_element 😅 👽 🔥 🚀 👻 ⛄ 👾 🍔 😄 🍰 🐑 😎 🏎 🤖 😇 😼 💪 🦄 🥓 🌮 🎉 💯 ⚛️ 🐠 🐳 🐿 🥳 🤩 🤯 🤠 👨‍💻 🦸‍ 🧝‍ 🧞‍ 🧙‍ 👨‍🚀 👨‍🔬 🕺 🦁 🐶 🐵 🐻 🦊 🐙 🦎 🦖 🦕 🦍 🦈 🐊 🦂 🐍 🐢 🐘 🐉 🦚 ✨ ☄️ ⚡️ 💥 💫 🧬 🔮 ⚗️ 🎊 🔭 ⚪️ 🔱)"
-}
-
-setopt promptsubst
-newRandomEmoji
-
-alias jestify="PROMPT=\"🃏\"$'\n'\"$ \""
-alias testinglibify="PROMPT=\"🐙\"$'\n'\"$ \""
-alias cypressify="PROMPT=\"🌀\"$'\n'\"$ \""
-alias staticify="PROMPT=\"🚀\"$'\n'\"$ \""
-alias nodeify="PROMPT=\"💥\"$'\n'\"$ \""
-alias reactify="PROMPT=\"⚛️\"$'\n'\"$ \""
-alias harryify="PROMPT=\"🧙‍\"$'\n'\"$ \""
-
 o() {
   if [[ $# -eq 0 ]]; then
     open .

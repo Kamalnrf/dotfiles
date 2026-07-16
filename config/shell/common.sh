@@ -5,6 +5,45 @@ alias ...="cd ../.."
 alias ....="cd ../../.."
 alias .....="cd ../../../.."
 
+git_branch() {
+  git branch --no-color 2>/dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\ \(\1\)/'
+}
+
+random_element() {
+  local index=$((RANDOM % $# + 1))
+  while [[ $index -gt 1 ]]; do
+    shift
+    index=$((index - 1))
+  done
+  printf "%s\n" "$1"
+}
+
+setEmoji() {
+  local emoji="$*"
+  if [[ -n "${ZSH_VERSION:-}" ]]; then
+    PROMPT='%F{yellow}%~%F{green}$(git_branch)%f '"$emoji"$'\n$ '
+  else
+    PS1='\[\e[33m\]\w\[\e[32m\]$(git_branch)\[\e[0m\] '"$emoji"$'\n$ '
+  fi
+}
+
+newRandomEmoji() {
+  setEmoji "$(random_element 😅 👽 🔥 🚀 👻 ⛄ 👾 🍔 😄 🍰 🐑 😎 🏎 🤖 😇 😼 💪 🦄 🥓 🌮 🎉 💯 ⚛️ 🐠 🐳 🐿 🥳 🤩 🤯 🤠 👨‍💻 🦸‍ 🧝‍ 🧞‍ 🧙‍ 👨‍🚀 👨‍🔬 🕺 🦁 🐶 🐵 🐻 🦊 🐙 🦎 🦖 🦕 🦍 🦈 🐊 🦂 🐍 🐢 🐘 🐉 🦚 ✨ ☄️ ⚡️ 💥 💫 🧬 🔮 ⚗️ 🎊 🔭 ⚪️ 🔱)"
+}
+
+if [[ -n "${ZSH_VERSION:-}" ]]; then
+  setopt promptsubst
+fi
+newRandomEmoji
+
+alias jestify="setEmoji 🃏"
+alias testinglibify="setEmoji 🐙"
+alias cypressify="setEmoji 🌀"
+alias staticify="setEmoji 🚀"
+alias nodeify="setEmoji 💥"
+alias reactify="setEmoji ⚛️"
+alias harryify="setEmoji 🧙‍"
+
 mkd() {
   mkdir -p "$@" && cd "$_"
 }
