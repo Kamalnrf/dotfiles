@@ -5,6 +5,7 @@
     "/usr/local/bin"
   ];
 
+  home.language.base = "C.UTF-8";
   home.sessionVariables.TERMINFO_DIRS = "${pkgs.ghostty.terminfo}/share/terminfo:";
 
   programs.bash = {

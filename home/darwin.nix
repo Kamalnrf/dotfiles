@@ -49,7 +49,7 @@
       npm-update = "npx npm-check-updates --dep prod,dev --upgrade";
       yarn-update = "yarn upgrade-interactive --latest";
       max = "ssh -t max-coder.exe.xyz 'tmux new -A -s coding'";
-      evrim = "ssh -t evrim-old.exe.xyz 'tmux new -A -s evrim'";
+      evrim = "ssh -t evrim.exe.xyz 'tmux new -A -s evrim'";
       l = "ls -lFG";
       ll = "ls -1a";
       la = "ls -lAFG";
