@@ -23,10 +23,6 @@
       g = "git";
       pg = "echo 'Pinging Google' && ping www.google.com";
       npm-update = "npx npm-check-updates --dep prod,dev --upgrade";
-      l = "ls -lF --color=auto";
-      ll = "ls -1a --color=auto";
-      la = "ls -lAF --color=auto";
-      lsd = "ls -lF --color=auto | grep --color=never '^d'";
       grep = "grep --color=auto";
       fgrep = "fgrep --color=auto";
       egrep = "egrep --color=auto";

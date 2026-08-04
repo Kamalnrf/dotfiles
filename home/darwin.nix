@@ -50,10 +50,6 @@
       yarn-update = "yarn upgrade-interactive --latest";
       max = "ssh -tt 'vm+max-coder@exe.dev' \"bash -lc 'exec tmux new -A -s coding'\"";
       evrim = "ssh -tt 'vm+evrim@exe.dev' \"bash -lc 'exec tmux new -A -s evrim'\"";
-      l = "ls -lFG";
-      ll = "ls -1a";
-      la = "ls -lAFG";
-      lsd = "ls -lFG | grep --color=never '^d'";
       grep = "grep --color=auto";
       fgrep = "fgrep --color=auto";
       egrep = "egrep --color=auto";

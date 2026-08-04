@@ -20,8 +20,15 @@
           homeDirectory,
           modules,
         }:
+        let
+          pkgs = import nixpkgs {
+            inherit system;
+            config.allowUnfreePredicate = pkg:
+              nixpkgs.lib.getName pkg == "1password-cli";
+          };
+        in
         home-manager.lib.homeManagerConfiguration {
-          pkgs = nixpkgs.legacyPackages.${system};
+          inherit pkgs;
           modules = [
             ./home/common.nix
             {

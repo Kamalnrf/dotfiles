@@ -120,7 +120,16 @@ in
 
   home.sessionPath = [ "$HOME/.nix-profile/bin" ];
 
+  home.shellAliases = {
+    ls = "eza";
+    l = "eza -l --classify=auto";
+    ll = "eza -1a";
+    la = "eza -la --classify=auto";
+    lsd = "eza -lD --classify=auto";
+  };
+
   home.packages = with pkgs; [
+    _1password-cli
     bc
     btop
     delta
@@ -131,6 +140,7 @@ in
     lsof
     mosh
     openssl
+    opencode
     ripgrep
     tmuxExpose
     tree
@@ -307,6 +317,11 @@ in
 
   programs.fzf.enable = true;
   programs.zoxide.enable = true;
+  programs.eza = {
+    enable = true;
+    enableBashIntegration = false;
+    enableZshIntegration = false;
+  };
   programs.direnv = {
     enable = true;
     nix-direnv.enable = true;
