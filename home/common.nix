@@ -1,5 +1,50 @@
 { config, lib, pkgs, ... }:
 let
+  onePasswordCliSigningKeyFingerprint = "3FEF9748469ADBE15DA7CA80AC2D62742012EA22";
+  onePasswordCliSigningKey = pkgs.fetchurl {
+    url = "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x${onePasswordCliSigningKeyFingerprint}";
+    hash = "sha256-aW7iPs438xPJaYmqlk5eKCL/vH6lLJzvIIgAY8T/Bd4=";
+  };
+  onePasswordCli = pkgs._1password-cli.overrideAttrs (old: {
+    nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.gnupg ];
+
+    # The Nixpkgs package uses the macOS installer, whose verification requires
+    # impure Apple tooling. Use 1Password's signed ZIP instead so the same pure
+    # OpenPGP verification works on macOS and Linux.
+    #
+    # When `nix flake update` bumps the CLI version, the hash below intentionally
+    # fails closed. Review the release and obtain the replacement hash with:
+    #   VERSION=2.x.y
+    #   nix store prefetch-file --json --unpack \
+    #     "https://cache.agilebits.com/dist/1P/op2/pkg/v$VERSION/op_darwin_arm64_v$VERSION.zip"
+    src = if pkgs.stdenv.hostPlatform.isDarwin then pkgs.fetchzip {
+      url = "https://cache.agilebits.com/dist/1P/op2/pkg/v${old.version}/op_darwin_arm64_v${old.version}.zip";
+      hash = "sha256-Qu3yOP1eMSF1V/EfbenQrZamOEUvFjlrhlY7PwWZN/8=";
+      stripRoot = false;
+    } else old.src;
+
+    unpackPhase = lib.optionalString pkgs.stdenv.hostPlatform.isDarwin ''
+      runHook preUnpack
+      cp -R "$src"/. .
+      chmod -R u+w .
+      runHook postUnpack
+    '';
+
+    # Verify op.sig using the key fingerprint published at
+    # https://www.1password.dev/cli/verify before executing or installing op.
+    preInstall = (old.preInstall or "") + ''
+      signing_key=${onePasswordCliSigningKey}
+      keyring="$TMPDIR/1password-cli-keyring.gpg"
+      export GNUPGHOME="$TMPDIR/gnupg"
+      mkdir -m 700 "$GNUPGHOME"
+
+      gpg --batch --with-colons --show-keys "$signing_key" \
+        | grep -F "fpr:::::::::${onePasswordCliSigningKeyFingerprint}:" >/dev/null
+      gpg --batch --yes --dearmor --output "$keyring" "$signing_key"
+      gpgv --keyring "$keyring" op.sig op
+    '';
+  });
+
   tmuxExposeSrc = pkgs.fetchFromGitHub {
     owner = "cesarferreira";
     repo = "tmux.expose";
@@ -129,7 +174,6 @@ in
   };
 
   home.packages = with pkgs; [
-    _1password-cli
     bc
     btop
     delta
@@ -146,6 +190,7 @@ in
     tree
     uv
     vt
+    onePasswordCli
   ];
 
   home.file = {
