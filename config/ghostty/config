@@ -1,0 +1,6 @@
+font-family = Codelia Ligatures
+font-feature = calt, liga
+font-shaping-break = no-cursor
+font-size = 16
+window-inherit-font-size = false
+theme = Catppuccin Mocha

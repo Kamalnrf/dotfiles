@@ -12,6 +12,11 @@
     "$HOME/.codeium/windsurf/bin"
   ];
 
+  home.file."Library/Application Support/com.mitchellh.ghostty/config" = {
+    source = ../config/ghostty/config;
+    force = true;
+  };
+
   programs.git.settings = {
     core = {
       precomposeUnicode = false;
