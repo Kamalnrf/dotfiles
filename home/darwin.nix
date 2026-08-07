@@ -53,8 +53,8 @@
       deleteDSFiles = "find . -name '.DS_Store' -type f -delete";
       npm-update = "npx npm-check-updates --dep prod,dev --upgrade";
       yarn-update = "yarn upgrade-interactive --latest";
-      max = "ssh -tt 'vm+max-coder@exe.dev' \"bash -lc 'exec tmux new -A -s coding'\"";
-      evrim = "ssh -tt 'vm+evrim@exe.dev' \"bash -lc 'exec tmux new -A -s evrim'\"";
+      max = "mosh 'vm+max-coder@exe.dev' bash -lc 'exec tmux new -A -s coding'";
+      evrim = "mosh 'vm+evrim@exe.dev' bash -lc 'exec tmux new -A -s evrim'";
       grep = "grep --color=auto";
       fgrep = "fgrep --color=auto";
       egrep = "egrep --color=auto";
