@@ -1,6 +1,9 @@
 font-family = TX-02-Variable
 font-feature = calt, liga
 font-shaping-break = no-cursor
-font-size = 15
+font-size = 16
 window-inherit-font-size = false
 theme = Catppuccin Mocha
+
+# Avoid Sprite interpreting Ctrl-\ as its legacy detach byte.
+keybind = ctrl+\=csi:92;5u
