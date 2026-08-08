@@ -57,6 +57,13 @@
           homeDirectory = "/home/exedev";
           modules = [ ./home/exedev.nix ];
         };
+
+        sprite = mkHome {
+          system = "x86_64-linux";
+          username = "sprite";
+          homeDirectory = "/home/sprite";
+          modules = [ ./home/sprite.nix ];
+        };
       };
     };
 }

@@ -126,7 +126,7 @@ let
     outputHashAlgo = "sha256";
     outputHash = {
       aarch64-darwin = "sha256-0BXgb2cbCEWKI0DQOZsAqXhilUYWVixzNim1/AF48CA=";
-      x86_64-linux = "sha256-+R4cfyIBDClwqkKow7+Yi05uA9ja/D6Ur1BNtW/WMCg=";
+      x86_64-linux = "sha256-v8NNQO6Zo3brIINLYC/3FTS1HvXWO2PvUZypytwGPuI=";
     }.${pkgs.stdenv.hostPlatform.system};
   };
 

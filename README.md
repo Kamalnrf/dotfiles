@@ -11,9 +11,10 @@ The setup script supports:
 
 - Apple Silicon macOS as `kamal` in `/Users/kamal`
 - x86_64 exe.dev VMs as `exedev` in `/home/exedev`
+- x86_64 Sprite VMs as `sprite` in `/home/sprite`
 
-It installs Determinate Nix when needed, then activates the matching Home
-Manager profile. It is safe to run again after pulling changes:
+It installs Nix when needed, then activates the matching Home Manager profile.
+It is safe to run again after pulling changes:
 
 ```sh
 cd ~/dotfiles
@@ -28,8 +29,8 @@ activations can also use Home Manager's default command:
 home-manager switch
 ```
 
-Machine-local shell settings belong in `~/.zshrc.local` on macOS or
-`~/.bashrc.local` on exe.dev. Machine-local Git settings belong in
+Machine-local shell settings belong in `~/.zshrc.local` on macOS and Sprite,
+or `~/.bashrc.local` on exe.dev. Machine-local Git settings belong in
 `~/.config/git/local`. Credentials and runtime state are intentionally not
 managed by this repository.
 

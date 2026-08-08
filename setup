@@ -16,6 +16,9 @@ case "$(uname -s):$(uname -m):$(id -un):$HOME" in
   Linux:x86_64:exedev:/home/exedev)
     PROFILE="exedev"
     ;;
+  Linux:x86_64:sprite:/home/sprite)
+    PROFILE="sprite"
+    ;;
   *)
     die "unsupported host ($(uname -s), $(uname -m), $(id -un), $HOME)"
     ;;
@@ -24,7 +27,14 @@ esac
 [[ "$DOTFILES_DIR" == "$HOME/dotfiles" ]] || die "clone this repository to $HOME/dotfiles (found $DOTFILES_DIR)"
 [[ -f "$DOTFILES_DIR/flake.nix" && -f "$DOTFILES_DIR/flake.lock" ]] || die "flake.nix or flake.lock is missing"
 
-if [[ -r /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]]; then
+# Nix's single-user profile script requires both HOME and USER. Some minimal
+# environments, including Sprites, do not export USER for non-login commands.
+export USER="${USER:-$(id -un)}"
+
+if [[ -r "$HOME/.nix-profile/etc/profile.d/nix.sh" ]]; then
+  # shellcheck disable=SC1091
+  source "$HOME/.nix-profile/etc/profile.d/nix.sh"
+elif [[ -r /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]]; then
   # shellcheck disable=SC1091
   source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
 fi
@@ -36,18 +46,38 @@ if ! command -v nix >/dev/null 2>&1; then
 
   installer="$(mktemp -t nix-installer.XXXXXX)"
   trap 'rm -f "$installer"' EXIT HUP INT TERM
-  curl --proto '=https' --tlsv1.2 -fsSL \
-    "https://install.determinate.systems/nix/tag/$INSTALLER_VERSION" \
-    -o "$installer"
-  sh "$installer" install --no-confirm
+
+  if [[ "$PROFILE" == "sprite" ]]; then
+    # Sprites do not run systemd, so use Nix's single-user installation
+    # instead of leaving a multi-user nix-daemon without an init service.
+    curl --proto '=https' --tlsv1.2 -fsSL https://nixos.org/nix/install -o "$installer"
+    sh "$installer" --no-daemon --yes
+  else
+    curl --proto '=https' --tlsv1.2 -fsSL \
+      "https://install.determinate.systems/nix/tag/$INSTALLER_VERSION" \
+      -o "$installer"
+    sh "$installer" install --no-confirm
+  fi
+
   rm -f "$installer"
   trap - EXIT HUP INT TERM
 
-  # shellcheck disable=SC1091
-  source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+  if [[ -r "$HOME/.nix-profile/etc/profile.d/nix.sh" ]]; then
+    # shellcheck disable=SC1091
+    source "$HOME/.nix-profile/etc/profile.d/nix.sh"
+  else
+    # shellcheck disable=SC1091
+    source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+  fi
 fi
 
 nix --version
+
+if [[ -n "${NIX_CONFIG:-}" ]]; then
+  export NIX_CONFIG="$NIX_CONFIG"$'\n''experimental-features = nix-command flakes'
+else
+  export NIX_CONFIG='experimental-features = nix-command flakes'
+fi
 
 if [[ -n "$(git -C "$DOTFILES_DIR" status --porcelain)" ]]; then
   printf 'setup: warning: the dotfiles checkout has uncommitted changes\n' >&2
