@@ -328,14 +328,6 @@ in
       yank
       resurrect
       {
-        plugin = continuum;
-        extraConfig = ''
-          set -g @continuum-restore 'on'
-          set -g @continuum-save-interval '5'
-          set -g @resurrect-processes 'ssh'
-        '';
-      }
-      {
         plugin = tmuxExposePlugin;
         extraConfig = ''
           set -g @tmux-expose-key 's'
@@ -354,6 +346,23 @@ in
           set -g @catppuccin_window_status_style 'rounded'
           set -g @catppuccin_window_text ' #{?#{m/r:^[⠀-⣿],#{pane_title}},#{=1:pane_title} ,}#W'
           set -g @catppuccin_window_current_text ' #{?#{m/r:^[⠀-⣿],#{pane_title}},#{=1:pane_title} ,}#W'
+          set -g status-left-length 100
+          set -g status-right-length 100
+          set -g status-left ""
+          set -g status-right "#{E:@catppuccin_status_application}"
+          set -ag status-right "#{E:@catppuccin_status_session}"
+          set -ag status-right "#{E:@catppuccin_status_date_time}"
+        '';
+      }
+      {
+        # Continuum must run after anything that writes status-right.
+        plugin = continuum;
+        extraConfig = ''
+          set -g @continuum-restore 'on'
+          set -g @continuum-save-interval '5'
+          set -g @resurrect-processes 'ssh'
+          set -g @resurrect-capture-pane-contents 'on'
+          set -g @resurrect-pane-contents-area 'visible'
         '';
       }
     ];
