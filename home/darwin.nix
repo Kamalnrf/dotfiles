@@ -1,5 +1,59 @@
 { config, lib, pkgs, ... }:
+let
+  opencodeServerPort = 49374;
+
+  opencodeServer = pkgs.writeShellApplication {
+    name = "opencode-server";
+    runtimeInputs = [ pkgs.coreutils ];
+    text = ''
+      set -euo pipefail
+
+      readonly tailscale=/usr/local/bin/tailscale
+      readonly opencode=${config.home.profileDirectory}/bin/opencode2
+
+      tailscale_ip=""
+      for _ in $(seq 1 60); do
+        tailscale_ip="$($tailscale ip -4 2>/dev/null | head -n 1 || true)"
+        if [[ "$tailscale_ip" == 100.* ]]; then
+          break
+        fi
+        tailscale_ip=""
+        sleep 2
+      done
+
+      if [[ -z "$tailscale_ip" ]]; then
+        printf '%s\n' "Tailscale did not provide an IPv4 address" >&2
+        exit 1
+      fi
+
+      exec "$opencode" serve \
+        --service \
+        --hostname "$tailscale_ip" \
+        --port ${toString opencodeServerPort} \
+        --cors https://opencode.ai
+    '';
+  };
+in
 {
+  launchd.agents.opencode-server = {
+    enable = true;
+    config = {
+      ProgramArguments = [ "${opencodeServer}/bin/opencode-server" ];
+      RunAtLoad = true;
+      KeepAlive = true;
+      ThrottleInterval = 30;
+      WorkingDirectory = config.home.homeDirectory;
+      StandardOutPath = "${config.home.homeDirectory}/Library/Logs/opencode-server.log";
+      StandardErrorPath = "${config.home.homeDirectory}/Library/Logs/opencode-server.error.log";
+      EnvironmentVariables = {
+        HOME = config.home.homeDirectory;
+        PATH = "${config.home.profileDirectory}/bin:/usr/local/bin:/usr/bin:/bin";
+      };
+    };
+  };
+
+  home.packages = [ pkgs.orbstack ];
+
   home.sessionPath = [
     "$HOME/.local/bin"
     "$HOME/.bin"
@@ -60,6 +114,7 @@
       egrep = "egrep --color=auto";
     };
     initContent = lib.mkOrder 1200 ''
+      bindkey -e
       source ${../config/shell/common.sh}
       source ${../config/shell/darwin.zsh}
       [[ -r "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"

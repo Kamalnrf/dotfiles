@@ -45,6 +45,50 @@ let
     '';
   });
 
+  opencode2 =
+    let
+      version = "0.0.0-beta-19151";
+      artifacts = {
+        aarch64-darwin = {
+          target = "darwin-arm64";
+          hash = "sha512-HyJlePrhOZ+/Rc8ue6sLjnydYRTpkGPaGI2N7WLSeNVPUSdSBHs0xKAaKnz+uKH8c/TwgRRxvjA2wh8TXqbj4Q==";
+        };
+        x86_64-linux = {
+          target = "linux-x64-baseline";
+          hash = "sha512-BHDv/03Lg2Lc/+zZ6tGfs8JBkRrSy0q4Fu3L+Iq/Mmvnh1pvDRvstev7ycSN8gVRIV79epjcwoiM8gONvvQPEg==";
+        };
+      };
+      artifact = artifacts.${pkgs.stdenv.hostPlatform.system}
+        or (throw "opencode2 ${version}: unsupported system ${pkgs.stdenv.hostPlatform.system}");
+    in
+    pkgs.stdenvNoCC.mkDerivation {
+      pname = "opencode2";
+      inherit version;
+      src = pkgs.fetchurl {
+        url = "https://registry.npmjs.org/@opencode-ai/cli-${artifact.target}/-/cli-${artifact.target}-${version}.tgz";
+        inherit (artifact) hash;
+      };
+      sourceRoot = "package";
+      nativeBuildInputs = lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.autoPatchelfHook ];
+      buildInputs = lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.stdenv.cc.cc.lib ];
+      dontBuild = true;
+
+      installPhase = ''
+        runHook preInstall
+        install -Dm755 bin/opencode2 "$out/bin/opencode2"
+        ln -s opencode2 "$out/bin/opencode"
+        runHook postInstall
+      '';
+
+      meta = {
+        description = "OpenCode 2 beta AI coding agent";
+        homepage = "https://opencode.ai/v2/docs";
+        license = lib.licenses.mit;
+        mainProgram = "opencode";
+        platforms = builtins.attrNames artifacts;
+      };
+    };
+
   tmuxExposeSrc = pkgs.fetchFromGitHub {
     owner = "cesarferreira";
     repo = "tmux.expose";
@@ -65,6 +109,49 @@ let
     rtpFilePath = "tmux.expose.tmux";
     src = tmuxExposeSrc;
   };
+
+  terminalControl =
+    let
+      version = "0.6.0";
+      artifacts = {
+        aarch64-darwin = {
+          target = "darwin-arm64";
+          hash = "sha512-QNKFRKabri02FUF8HxelIue4QZe71H6BqgDQvvmH9uGXjgQ8bJktz8RdxcJPm9r15zdiA2zTVjN0hAvENvAFCA==";
+        };
+        x86_64-linux = {
+          target = "linux-x64-gnu";
+          hash = "sha512-1kmi8ESh8Nswt1reAHkpBlcfBQ2ka8PE3V0cPjQAz6o7uxNuXLOqr4VAnZ0UxOcyPrFfx5slJpKc9gG3bbKJHg==";
+        };
+      };
+      artifact = artifacts.${pkgs.stdenv.hostPlatform.system}
+        or (throw "terminal-control ${version}: unsupported system ${pkgs.stdenv.hostPlatform.system}");
+    in
+    pkgs.stdenvNoCC.mkDerivation {
+      pname = "terminal-control";
+      inherit version;
+      src = pkgs.fetchurl {
+        url = "https://registry.npmjs.org/@kitlangton/terminal-control-${artifact.target}/-/terminal-control-${artifact.target}-${version}.tgz";
+        inherit (artifact) hash;
+      };
+      sourceRoot = "package";
+      nativeBuildInputs = lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.autoPatchelfHook ];
+      buildInputs = lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.stdenv.cc.cc.lib ];
+      dontBuild = true;
+
+      installPhase = ''
+        runHook preInstall
+        install -Dm755 bin/termctrl "$out/bin/termctrl"
+        runHook postInstall
+      '';
+
+      meta = {
+        description = "Control and test terminal applications through stable visible state";
+        homepage = "https://github.com/anomalyco/terminal-control";
+        license = lib.licenses.mit;
+        mainProgram = "termctrl";
+        platforms = builtins.attrNames artifacts;
+      };
+    };
 
   vtSrc = pkgs.fetchFromGitHub {
     owner = "val-town";
@@ -179,14 +266,16 @@ in
     delta
     fd
     flyctl
+    glow
     hunk
     jq
     lsof
     mosh
     openssl
-    opencode
+    opencode2
     ripgrep
     tmuxExpose
+    terminalControl
     tree
     uv
     vt

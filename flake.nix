@@ -24,7 +24,10 @@
           pkgs = import nixpkgs {
             inherit system;
             config.allowUnfreePredicate = pkg:
-              nixpkgs.lib.getName pkg == "1password-cli";
+              builtins.elem (nixpkgs.lib.getName pkg) [
+                "1password-cli"
+                "orbstack"
+              ];
           };
         in
         home-manager.lib.homeManagerConfiguration {

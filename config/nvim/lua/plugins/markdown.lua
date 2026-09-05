@@ -2,6 +2,12 @@ local markdownlint_config = vim.fn.stdpath("config") .. "/.markdownlint-cli2.jso
 
 return {
   {
+    "MeanderingProgrammer/render-markdown.nvim",
+    opts = {
+      enabled = false,
+    },
+  },
+  {
     "mfussenegger/nvim-lint",
     opts = {
       linters = {
