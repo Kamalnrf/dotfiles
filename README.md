@@ -34,10 +34,14 @@ or `~/.bashrc.local` on exe.dev. Machine-local Git settings belong in
 `~/.config/git/local`. Credentials and runtime state are intentionally not
 managed by this repository.
 
-On macOS, the Home Manager profile also installs an OpenCode LaunchAgent. It
-starts `opencode2 serve --service` at login, waits for Tailscale, and binds the
-shared server to the current Tailscale IPv4 address on port `49374`. Its
-password is stored in OpenCode's private, mode-600 service configuration, not
+On macOS, the Home Manager profile also installs OpenCode and Amp LaunchAgents. The
+OpenCode agent starts `opencode2 serve --service` at login, waits for Tailscale,
+and binds the shared server to the current Tailscale IPv4 address on port
+`49374`. The Amp agent starts `amp --no-tui --runner-id mac-studio
+--discover-dirs=~/workspace` at login, serving every Git checkout under
+`~/workspace` as runner `mac-studio`. Both agents restart on failure, with logs in
+`~/Library/Logs/opencode-server.log` and `~/Library/Logs/amp-runner.log`.
+Its password is stored in OpenCode's private, mode-600 service configuration, not
 in this repository or the Nix store. The `--service` mode is important: the
 terminal UI and remote web clients must use the same server to receive live
 session events.
@@ -61,15 +65,23 @@ git diff -- flake.lock
 ./setup
 ```
 
-OpenCode 2 is a beta distributed through platform-specific npm packages, so its
-version and hashes are pinned separately in `home/common.nix`. To find the next
-values:
+Home Manager supplies Node/npm and installs OpenCode 2.0.29 through npm on first
+activation, under `~/.local`. Later activations leave an existing installation
+alone, so OpenCode can manage its own updates without being downgraded:
 
 ```sh
-VERSION="$(npm view @opencode-ai/cli@beta version)"
-npm view "@opencode-ai/cli-darwin-arm64@$VERSION" dist.integrity
-npm view "@opencode-ai/cli-linux-x64-baseline@$VERSION" dist.integrity
+opencode upgrade
+# Or select a version:
+opencode upgrade 2.0.29
 ```
+
+`NPM_CONFIG_PREFIX` points npm global installs at `~/.local`, whose `bin`
+directory takes precedence over the Nix profile. First activation needs network
+access. This reproduces initial setup, not the version after subsequent upgrades.
+Restart the OpenCode LaunchAgent after upgrading to update the running server.
+
+Amp is installed separately: `~/.local/bin/amp` launches `~/.amp/bin/amp`.
+The dotfiles manage its runner LaunchAgent, but do not install the Amp CLI.
 
 ## Thanks to...
 

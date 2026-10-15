@@ -45,50 +45,6 @@ let
     '';
   });
 
-  opencode2 =
-    let
-      version = "0.0.0-beta-19151";
-      artifacts = {
-        aarch64-darwin = {
-          target = "darwin-arm64";
-          hash = "sha512-HyJlePrhOZ+/Rc8ue6sLjnydYRTpkGPaGI2N7WLSeNVPUSdSBHs0xKAaKnz+uKH8c/TwgRRxvjA2wh8TXqbj4Q==";
-        };
-        x86_64-linux = {
-          target = "linux-x64-baseline";
-          hash = "sha512-BHDv/03Lg2Lc/+zZ6tGfs8JBkRrSy0q4Fu3L+Iq/Mmvnh1pvDRvstev7ycSN8gVRIV79epjcwoiM8gONvvQPEg==";
-        };
-      };
-      artifact = artifacts.${pkgs.stdenv.hostPlatform.system}
-        or (throw "opencode2 ${version}: unsupported system ${pkgs.stdenv.hostPlatform.system}");
-    in
-    pkgs.stdenvNoCC.mkDerivation {
-      pname = "opencode2";
-      inherit version;
-      src = pkgs.fetchurl {
-        url = "https://registry.npmjs.org/@opencode-ai/cli-${artifact.target}/-/cli-${artifact.target}-${version}.tgz";
-        inherit (artifact) hash;
-      };
-      sourceRoot = "package";
-      nativeBuildInputs = lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.autoPatchelfHook ];
-      buildInputs = lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.stdenv.cc.cc.lib ];
-      dontBuild = true;
-
-      installPhase = ''
-        runHook preInstall
-        install -Dm755 bin/opencode2 "$out/bin/opencode2"
-        ln -s opencode2 "$out/bin/opencode"
-        runHook postInstall
-      '';
-
-      meta = {
-        description = "OpenCode 2 beta AI coding agent";
-        homepage = "https://opencode.ai/v2/docs";
-        license = lib.licenses.mit;
-        mainProgram = "opencode";
-        platforms = builtins.attrNames artifacts;
-      };
-    };
-
   tmuxExposeSrc = pkgs.fetchFromGitHub {
     owner = "cesarferreira";
     repo = "tmux.expose";
@@ -250,7 +206,20 @@ in
   home.stateVersion = "22.11";
   programs.home-manager.enable = true;
 
-  home.sessionPath = [ "$HOME/.nix-profile/bin" ];
+  home.sessionPath = [
+    "${config.home.homeDirectory}/.local/bin"
+    "$HOME/.nix-profile/bin"
+    "${config.xdg.dataHome}/pnpm"
+  ];
+
+  # Bootstrap only: leave subsequent upgrades under OpenCode/npm's control.
+  home.activation.installOpenCode = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    if [[ ! -x "${config.home.homeDirectory}/.local/bin/opencode" ]]; then
+      run env PATH="${lib.makeBinPath [ pkgs.nodejs ]}:$PATH" \
+        NPM_CONFIG_PREFIX="${config.home.homeDirectory}/.local" \
+        ${pkgs.nodejs}/bin/npm install --global @opencode/cli@2.0.29
+    fi
+  '';
 
   home.shellAliases = {
     ls = "eza";
@@ -271,8 +240,9 @@ in
     jq
     lsof
     mosh
+    nodejs
     openssl
-    opencode2
+    pnpm
     ripgrep
     tmuxExpose
     terminalControl
@@ -291,6 +261,8 @@ in
   };
 
   home.sessionVariables = {
+    NPM_CONFIG_PREFIX = "${config.home.homeDirectory}/.local";
+    PNPM_HOME = "${config.xdg.dataHome}/pnpm";
     RIPGREP_CONFIG_PATH = "${config.xdg.configHome}/ripgrep/config";
     TMUX_RESURRECT_RESTORE = "${pkgs.tmuxPlugins.resurrect}/share/tmux-plugins/resurrect/scripts/restore.sh";
   };

@@ -9,7 +9,7 @@ let
       set -euo pipefail
 
       readonly tailscale=/usr/local/bin/tailscale
-      readonly opencode=${config.home.profileDirectory}/bin/opencode2
+      readonly opencode=${config.home.homeDirectory}/.local/bin/opencode2
 
       tailscale_ip=""
       for _ in $(seq 1 60); do
@@ -33,6 +33,20 @@ let
         --cors https://opencode.ai
     '';
   };
+
+  ampRunner = pkgs.writeShellApplication {
+    name = "amp-runner";
+    runtimeInputs = [ pkgs.coreutils ];
+    text = ''
+      set -euo pipefail
+
+      readonly amp=${config.home.homeDirectory}/.local/bin/amp
+
+      exec "$amp" --no-tui \
+        --runner-id mac-studio \
+        --discover-dirs=${config.home.homeDirectory}/workspace
+    '';
+  };
 in
 {
   launchd.agents.opencode-server = {
@@ -52,10 +66,29 @@ in
     };
   };
 
-  home.packages = [ pkgs.orbstack ];
+  launchd.agents.amp-runner = {
+    enable = true;
+    config = {
+      ProgramArguments = [ "${ampRunner}/bin/amp-runner" ];
+      RunAtLoad = true;
+      KeepAlive = true;
+      ThrottleInterval = 30;
+      WorkingDirectory = "${config.home.homeDirectory}/workspace";
+      StandardOutPath = "${config.home.homeDirectory}/Library/Logs/amp-runner.log";
+      StandardErrorPath = "${config.home.homeDirectory}/Library/Logs/amp-runner.error.log";
+      EnvironmentVariables = {
+        HOME = config.home.homeDirectory;
+        PATH = "${config.home.profileDirectory}/bin:/usr/local/bin:/usr/bin:/bin";
+      };
+    };
+  };
+
+  home.packages = [
+    pkgs.librespeed-cli
+    pkgs.orbstack
+  ];
 
   home.sessionPath = [
-    "$HOME/.local/bin"
     "$HOME/.bin"
     "$HOME/.bun/bin"
     "$HOME/.deno/bin"
