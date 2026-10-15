@@ -71,6 +71,13 @@ in
     force = true;
   };
 
+  xdg.configFile."rex/init.lua".source = ../config/rex/init.lua;
+
+  targets.darwin.defaults."com.superlogical.rex" = {
+    "Workspace.terminalFontName" = "Codelia Ligatures";
+    "Workspace.terminalFontPointSize" = 16.0;
+  };
+
   programs.git.settings = {
     core = {
       precomposeUnicode = false;
