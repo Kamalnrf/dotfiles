@@ -154,7 +154,6 @@ in
       egrep = "egrep --color=auto";
     };
     initContent = lib.mkOrder 1200 ''
-      bindkey -e
       source ${../config/shell/common.sh}
       source ${../config/shell/darwin.zsh}
       [[ -r "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"
