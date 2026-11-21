@@ -41,9 +41,17 @@ let
       set -euo pipefail
 
       readonly amp=${config.home.homeDirectory}/.local/bin/amp
+      readonly runner_id_file=${config.home.homeDirectory}/.config/amp/runner-id
+
+      # Every Mac shares this profile, so each needs its own runner ID.
+      if [[ -s "$runner_id_file" ]]; then
+        runner_id="$(tr -d '[:space:]' < "$runner_id_file")"
+      else
+        runner_id="$(/usr/sbin/scutil --get LocalHostName | tr '[:upper:]' '[:lower:]')"
+      fi
 
       exec "$amp" --no-tui \
-        --runner-id mac-studio \
+        --runner-id "$runner_id" \
         --discover-dirs=${config.home.homeDirectory}/workspace
     '';
   };

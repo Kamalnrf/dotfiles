@@ -37,9 +37,11 @@ managed by this repository.
 On macOS, the Home Manager profile also installs OpenCode and Amp LaunchAgents. The
 OpenCode agent starts `opencode2 serve --service` at login, waits for Tailscale,
 and binds the shared server to the current Tailscale IPv4 address on port
-`49374`. The Amp agent starts `amp --no-tui --runner-id mac-studio
---discover-dirs=~/workspace` at login, serving every Git checkout under
-`~/workspace` as runner `mac-studio`. Both agents restart on failure, with logs in
+`49374`. The Amp agent starts `amp --no-tui --discover-dirs=~/workspace` at
+login, serving every Git checkout under `~/workspace`. Its runner ID comes from
+`~/.config/amp/runner-id` when that file exists (the Mac Studio's says
+`mac-studio`), otherwise from the lowercased `LocalHostName`, so each Mac
+registers as its own runner. Both agents restart on failure, with logs in
 `~/Library/Logs/opencode-server.log` and `~/Library/Logs/amp-runner.log`.
 Its password is stored in OpenCode's private, mode-600 service configuration, not
 in this repository or the Nix store. The `--service` mode is important: the
@@ -54,6 +56,40 @@ opencode2 service set password '<paste-the-generated-value-here>'
 ```
 
 The server uses `opencode` as its username by default.
+
+## New Mac
+
+This repository restores the shell, editor, terminal, and LaunchAgents. It does
+not restore apps, credentials, or `~/workspace`. On the new Mac, as user
+`kamal`:
+
+1. Install Xcode Command Line Tools (`xcode-select --install`), Tailscale
+   Standalone, and the Amp CLI and app, then sign in to each.
+2. Copy `~/.ssh` (or create a key and add it to GitHub), then run
+   `gh auth login`.
+3. Clone and activate: `git clone git@github.com:Kamalnrf/dotfiles.git ~/dotfiles && ~/dotfiles/setup`.
+4. Clone the repositories you need into `~/workspace`. Work with no remote or
+   unpushed commits exists only on the Mac Studio; reach it over Tailscale.
+
+Migration Assistant copies everything instead, including apps, keychains, and
+uncommitted work. Afterwards, delete the copied `~/.config/amp/runner-id` so the
+new Mac does not register as `mac-studio` too.
+
+## Always-on remote Mac
+
+The Mac Studio stays reachable over Tailscale (`kamals-mac-studio`) for SSH,
+Screen Sharing, OpenCode, and the Amp runner. Tailscale Standalone and the
+LaunchAgents start only after a GUI login, so the Mac must log in by itself
+after a power cut:
+
+- `sudo pmset -a autorestart 1 sleep 0 womp 1` boots after power returns and
+  never sleeps.
+- FileVault prevents automatic login. With FileVault on, macOS 26 can only be
+  unlocked over SSH from the same LAN, which Tailscale cannot reach before
+  unlock. For unattended recovery, turn FileVault off and set Users & Groups >
+  Automatically log in as `kamal`.
+- Remote Login and Screen Sharing in System Settings > General > Sharing.
+- Ethernet instead of Wi-Fi, and a UPS if possible.
 
 ## Updating pinned packages
 
