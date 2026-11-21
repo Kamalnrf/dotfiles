@@ -63,13 +63,26 @@ This repository restores the shell, editor, terminal, and LaunchAgents. It does
 not restore apps, credentials, or `~/workspace`. On the new Mac, as user
 `kamal`:
 
-1. Install Xcode Command Line Tools (`xcode-select --install`), Tailscale
-   Standalone, and the Amp CLI and app, then sign in to each.
+1. Install Xcode Command Line Tools (`xcode-select --install`) and the apps
+   below, then sign in to each. Homebrew is not used.
 2. Copy `~/.ssh` (or create a key and add it to GitHub), then run
    `gh auth login`.
 3. Clone and activate: `git clone git@github.com:Kamalnrf/dotfiles.git ~/dotfiles && ~/dotfiles/setup`.
 4. Clone the repositories you need into `~/workspace`. Work with no remote or
    unpushed commits exists only on the Mac Studio; reach it over Tailscale.
+
+Manual installs (they update themselves, so they stay out of Nix):
+
+- Essentials: Amp (CLI and app), Tailscale Standalone, Rex, Raycast, Google
+  Chrome, Xcode (App Store)
+- Chat and AI: ChatGPT, Claude, Discord, Slack, Television (`tv`, via
+  vite-plus)
+- Editors and dev: Zed, Ghostty, cmux, Conductor, Obsidian
+- Browsers and utilities: Dia, Helium, Firefox, Screen Studio, Suspicious
+  Package, Logi Capture, Logi Tune
+- CLIs with their own installers: Claude Code, Codex, bun, deno, juliaup
+- Rust: Nix supplies `rustup`; run `rustup default stable` once. Binaries from
+  `cargo install` (such as `tv-sync`) go to `~/.cargo/bin`, which is on `PATH`.
 
 Migration Assistant copies everything instead, including apps, keychains, and
 uncommitted work. Afterwards, delete the copied `~/.config/amp/runner-id` so the

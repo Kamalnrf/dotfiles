@@ -92,13 +92,20 @@ in
   };
 
   home.packages = [
+    pkgs.agent-browser
+    pkgs.gradle
+    pkgs.lazygit
     pkgs.librespeed-cli
     pkgs.lima
     pkgs.orbstack
+    pkgs.rustup
+    pkgs.vhs
+    pkgs.zig
   ];
 
   home.sessionPath = [
     "$HOME/.bin"
+    "$HOME/.cargo/bin"
     "$HOME/.bun/bin"
     "$HOME/.deno/bin"
     "$HOME/.fly/bin"
