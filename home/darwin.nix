@@ -93,6 +93,7 @@ in
 
   home.packages = [
     pkgs.librespeed-cli
+    pkgs.lima
     pkgs.orbstack
   ];
 
